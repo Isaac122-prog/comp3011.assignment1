@@ -4,26 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Speech to Text</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-<main>
+<main class="app">
     <h1>Speech to Text</h1>
-<button id="startButton">
-    Start Recording
-</button>
-<button id="stopButton" disabled>
-    Stop Recording
-</button>
-<p id="status">
-    Ready to record.
-</p>
-<section>
-    <h2>Transcription</h2>
-    <p id="result">
-        Your transcription will appear here.
-    </p>
-</section>
+    <p class="subtitle">Record yourself speaking and get an instant transcription.</p>
+    <section class="recorder" aria-label="Recording controls">
+        <div class="controls">
+            <button id="startButton" aria-label="Start recording your voice">
+                <span class="icon" aria-hidden="true">●</span> Start Recording
+            </button>
+            <button id="stopButton" disabled aria-label="Stop recording">
+                <span class="icon" aria-hidden="true">■</span> Stop Recording
+            </button>
+        </div>
+
+        <div class="recording-meta" id="recordingMeta" hidden>
+            <p class="recording-indicator" aria-hidden="true">
+                <span class="pulse-dot"></span> Recording...
+            </p>
+            <span id="timer" class="timer" aria-hidden="true">0:00</span>
+        </div>
+
+        <canvas id="visualizer" width="432" height="60" hidden aria-hidden="true"></canvas>
+
+        <p id="status" class="status" role="status" aria-live="polite">Ready to record.
+        </p>
+
+        <div id="errorBanner" class="error-banner" role="alert" hidden></div>
+
+        <div id="playbackContainer" class="playback" hidden>
+            <p class="playback-label">Your recording</p>
+            <audio id="playbackAudio" controls></audio>
+        </div>
+    </section>
+
+    <section class="transcription" aria-label="Transcription result">
+        <div class="transcription-header">
+            <h2>Transcription</h2>
+            <button id="copyButton" class="copy-button" hidden aria-label="Copy transcription to clipboard">
+                Copy
+            </button>
+        </div>
+        <p id="result" aria-live="polite">
+            Your transcription will appear here.
+        </p>
+    </section>
 </main>
 <script src="app.js"></script>
 </body>
