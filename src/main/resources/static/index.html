@@ -8,9 +8,11 @@
 </head>
 
 <body>
+	<script src="app.js"></script>
 <main class="app">
     <h1>Speech to Text</h1>
     <p class="subtitle">Record yourself speaking and get an instant transcription.</p>
+	
     <section class="recorder" aria-label="Recording controls">
         <div class="controls">
             <button id="startButton" aria-label="Start recording your voice">
@@ -30,29 +32,24 @@
 
         <canvas id="visualizer" width="432" height="60" hidden aria-hidden="true"></canvas>
 
-        <p id="status" class="status" role="status" aria-live="polite">Ready to record.
-        </p>
+        <p id="status" class="status" role="status" aria-live="polite">Ready to record.</p>
 
         <div id="errorBanner" class="error-banner" role="alert" hidden></div>
 
         <div id="playbackContainer" class="playback" hidden>
             <p class="playback-label">Your recording</p>
             <audio id="playbackAudio" controls></audio>
+            <button id="transcribeButton" class="transcribe-button" disabled>Transcribe Again</button>
         </div>
     </section>
 
     <section class="transcription" aria-label="Transcription result">
         <div class="transcription-header">
             <h2>Transcription</h2>
-            <button id="copyButton" class="copy-button" hidden aria-label="Copy transcription to clipboard">
-                Copy
-            </button>
+            <button id="copyButton" class="copy-button" hidden aria-label="Copy transcription to clipboard">Copy</button>
         </div>
-        <p id="result" aria-live="polite">
-            Your transcription will appear here.
-        </p>
+        <p id="result" aria-live="polite">Your transcription will appear here.</p>
     </section>
 </main>
-<script src="app.js"></script>
 </body>
 </html>

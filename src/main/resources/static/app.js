@@ -7,6 +7,8 @@ let analyser = null;
 let visualizerAnimationId = null;
 let timerIntervalId = null;
 let recordingStartTime = null;
+let pendingAudioBlob = null;
+let pendingMimeType = null;
 
 const startButton = document.getElementById('startButton');
 const stopButton = document.getElementById('stopButton');
@@ -20,6 +22,7 @@ const canvasCtx = visualizerCanvas.getContext('2d');
 const playbackContainer = document.getElementById('playbackContainer');
 const playbackAudio = document.getElementById('playbackAudio');
 const copyButton = document.getElementById('copyButton');
+const transcribeButton = document.getElementById('transcribeButton');
 
 function showError(message) {
     errorBanner.textContent = message;
@@ -41,7 +44,6 @@ function setRecordingUI(isRecording) {
 function startTimer() {
     recordingStartTime = Date.now();
     timerLabel.textContent = '0:00';
-
     timerIntervalId = setInterval(() => {
         const elapsedSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
         const minutes = Math.floor(elapsedSeconds / 60);
@@ -88,11 +90,11 @@ function startVisualizer(stream) {
         for (let i = 0; i < barCount; i++) {
             const value = dataArray[i * step];
             const barHeight = (value / 255) * height;
+
             canvasCtx.fillStyle = `hsl(${215 + (value / 255) * 20}, 90%, ${45 + (value / 255) * 20}%)`;
             canvasCtx.fillRect(i * barWidth + 1, height - barHeight, barWidth - 2, barHeight);
         }
     }
-
     draw();
 }
 
@@ -101,7 +103,6 @@ function stopVisualizer() {
         cancelAnimationFrame(visualizerAnimationId);
         visualizerAnimationId = null;
     }
-	
     if (audioContext) {
         audioContext.close();
         audioContext = null;
@@ -109,10 +110,39 @@ function stopVisualizer() {
     canvasCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
 }
 
+async function runTranscription() {
+    if (!pendingAudioBlob) {
+        return;
+    }
+
+    clearError();
+    transcribeButton.disabled = true;
+    copyButton.hidden = true;
+    statusText.textContent = 'Uploading audio and transcribing…';
+
+    try {
+        const transcription = await uploadAudio(pendingAudioBlob, pendingMimeType);
+        resultText.textContent = transcription;
+        statusText.textContent = 'Transcription complete.';
+        copyButton.hidden = false;
+        copyButton.classList.remove('copied');
+        copyButton.textContent = 'Copy';
+    } catch (error) {
+        console.error('Transcription error:', error);
+        showError('Something went wrong while transcribing your recording. Please try again.');
+        statusText.textContent = 'Ready to record.';
+        resultText.textContent = 'Your transcription will appear here.';
+    }
+
+    transcribeButton.disabled = false;
+}
+
 startButton.addEventListener('click', async () => {
     audioChunks = [];
+    pendingAudioBlob = null;
+    pendingMimeType = null;
     clearError();
-    resultText.textContent = '';
+    resultText.textContent = 'Your transcription will appear here.';
     playbackContainer.hidden = true;
     copyButton.hidden = true;
 
@@ -141,28 +171,13 @@ startButton.addEventListener('click', async () => {
             stopVisualizer();
             stopTimer();
 
+            pendingAudioBlob = audioBlob;
+            pendingMimeType = mediaRecorder.mimeType;
             playbackAudio.src = URL.createObjectURL(audioBlob);
             playbackContainer.hidden = false;
 
             setRecordingUI(false);
-            startButton.disabled = true;
-            statusText.textContent = 'Uploading audio and transcribing…';
-
-            try {
-                const transcription = await uploadAudio(audioBlob, mediaRecorder.mimeType);
-                resultText.textContent = transcription;
-                statusText.textContent = 'Transcription complete.';
-                copyButton.hidden = false;
-                copyButton.classList.remove('copied');
-                copyButton.textContent = 'Copy';
-            } catch (error) {
-                console.error('Transcription error:', error);
-                showError('Something went wrong while transcribing your recording. Please try again.');
-                statusText.textContent = 'Ready to record.';
-                resultText.textContent = 'Your transcription will appear here.';
-            }
-
-            startButton.disabled = false;
+            await runTranscription();
         });
 
         mediaRecorder.start();
@@ -185,6 +200,10 @@ stopButton.addEventListener('click', () => {
         statusText.textContent = 'Stopping recording…';
         stopButton.disabled = true;
     }
+});
+
+transcribeButton.addEventListener('click', () => {
+    runTranscription();
 });
 
 copyButton.addEventListener('click', async () => {
