@@ -31,3 +31,7 @@ Boots the full application with @SpringBootTest(webEnvironment = WebEnvironment.
 HTTP requests at /api/transcribe (with the transcription service stubbed, so no real OpenAI cost is incurred), asserting every single request completes successfully with no timeouts or dropped connections.
 
 This is the assignment's core non-functional requirement — "handle >200 concurrent blocking HTTP requests" — verified directly rather than assumed from configuration alone. It exercises the real server.tomcat.threads.max setting in application.properties; if that value were ever reduced below what's needed, or a controller became accidentally stateful/blocking on a shared lock, this test would fail or time out where a single manual request would look completely fine.
+
+### TranscriptionLoggingTest
+
+Captures real log output via a Logback ListAppender attached directly to TranscriptionController's logger, and asserts that a failed transcription produces an ERROR-level log entry and a successful one produces an INFO-level entry. This ties the logging strategy described above to an actual regression test, if the log messages in the controller were ever removed or their level changed, this test would fail immediately rather than the gap only being noticed by a human reading the code.
